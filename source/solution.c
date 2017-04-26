@@ -78,7 +78,7 @@ int solveCube( int cube[6][3][3] )
             { &cube[5][2][1], &cube[3][2][1] }
         }
     };
-    // displayEdges( edges );
+    displayEdges( edges );
 
     // //printf( "Setting Corners\n" );
     int * corners[2][4][3] = {

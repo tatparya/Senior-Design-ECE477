@@ -65,7 +65,7 @@ void CreateArray();
 uint16_t rxA2;
 int counter=0;
 
-uint8_t rx_buffer[54];
+uint8_t rx_buffer[100];
 uint16_t bufferIndex = 0;
 bool data_rx_done = 0;
 bool data_array_created = 0;
@@ -131,8 +131,8 @@ void main(void)
     printf("Starting\n");
 
     //  RUN TESTS
-    testRobot();
-    //  testUART();
+    //  testRobot();
+    testUART();
     //  testKoc();
 }
 
@@ -168,7 +168,7 @@ void createArray()
     printf("Finally the array is here\n");
 
     //  Set array elements
-    int buff_count=0;
+    int buff_count=1;
     for (i=0; i < xlen; ++i)
     {
         for (j=0; j < ylen; ++j)
@@ -306,15 +306,6 @@ void testUART()
 {
     while( 1 )
     {
-        //  Check if cube received
-        if(bufferIndex == 55)
-        {
-            // Cube Data Received from Pi
-            printf("Cube orientation data received\n");
-            data_rx_done = 1;
-            bufferIndex = 0;
-        }
-
         if (data_rx_done)
         {
             // Array finally created
@@ -386,12 +377,18 @@ void eUSCIA2IsrHandler(void) {
                 //  God mode
                 godMode = 1;
                 seqDone = 0;
+
+                printf( "God mode: ON!\n" );
             }
             else
             {
                 //  Teaching mode
                 godMode = 0;
+
+                printf( "God mode: OFF!\n" );
             }
+
+            bufferIndex++;
         }
 
         else
@@ -399,27 +396,33 @@ void eUSCIA2IsrHandler(void) {
             if( godMode )
             {
                 rxA2 = UCA2RXBUF;
-                rx_buffer[bufferIndex] = rxA2-'0';
+                rx_buffer[bufferIndex-1] = rxA2-'0';
 
                 //  Check if seq received
-                if( rx_buffer[ bufferIndex ] == -1 )
+                if( rx_buffer[ bufferIndex-1 ] == -1 )
                 {
                     seqDone = 1;
                     kocLen = bufferIndex - 2;
                 }
 
-                printf( "|   INDEX = %d : %d \n", bufferIndex, rx_buffer[ bufferIndex ] );
-                bufferIndex++;
+                printf( "|   INDEX = %d : %d \n", bufferIndex - 1, rx_buffer[ bufferIndex - 1] );
             }
             else
             {
                 rxA2 = UCA2RXBUF;
-                rx_buffer[bufferIndex] = rxA2-'0';
+                rx_buffer[bufferIndex - 1] = rxA2-'0';
 
-                printf( "|   INDEX = %d : %d \n", bufferIndex, rx_buffer[ bufferIndex ] );
-                bufferIndex++;
+                printf( "|   INDEX = %d : %d \n", bufferIndex - 1, rx_buffer[ bufferIndex - 1] );
             }
+            bufferIndex++;
+        }
 
+        if( bufferIndex == 56 )
+        {
+            data_rx_done = 1;
+            // Cube Data Received from Pi
+            printf("Cube orientation data received\n");
+            bufferIndex = 0;
         }
     }
 }
